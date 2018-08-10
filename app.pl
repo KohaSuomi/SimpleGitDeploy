@@ -7,8 +7,9 @@ app->config(hypnotoad => {listen => ['http://*:8081']});
 
 post '/event_handler' => sub {
   my $c = shift;
-  print Dumper from_json($c->param{"payload"});
-  $c->render(json => $c->req->body);
+  my $params =  $c->req->params->to_hash;
+  print Dumper $params->{"payload"};
+  $c->render(json => {status => "success"});
 };
 
 app->start;
