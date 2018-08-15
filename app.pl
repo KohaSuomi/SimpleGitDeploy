@@ -1,15 +1,8 @@
 #!/usr/bin/env perl
-use Mojolicious::Lite;
-use JSON;
-use Data::Dumper;
 
-app->config(hypnotoad => {listen => ['http://*:8081']});
+use FindBin;
+BEGIN { unshift @INC, "$FindBin::Bin/lib" }
+use Mojolicious::Commands;
 
-post '/event_handler' => sub {
-  my $c = shift;
-  my $params =  $c->req->params->to_hash;
-  print Dumper $params->{"payload"};
-  $c->render(json => {status => "success"});
-};
-
-app->start;
+# Start command line interface for application
+Mojolicious::Commands->start_app('SimpleGitDeploy');

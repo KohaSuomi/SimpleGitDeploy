@@ -1,0 +1,27 @@
+swagger: '2.0'
+info:
+  version: '0.42'
+  title: Test
+schemes: [ http ]
+basePath: "/api"
+paths:
+  /event_handler:
+    post:
+      x-mojo-to: "deployment#event"
+      operationId: deployment
+      consumes:
+        - application/json
+      parameters:
+      - in: body
+        name: body
+        schema:
+          type: object
+      responses:
+        200:
+          description: Deployment event handler success
+          schema:
+            type: object
+        500:
+          description: Deployment event handler error
+          schema:
+            type: object
