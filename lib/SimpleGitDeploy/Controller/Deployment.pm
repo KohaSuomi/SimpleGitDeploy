@@ -7,14 +7,13 @@ use Try::Tiny;
 
 sub event {
   my $c = shift->openapi->valid_input or return;
-
   try {
     my $body =  $c->req->body;
-    my $event = $c->req->headers->{"headers"}->{"x-github-event"};
+    my $event = shift @{$c->req->headers->{"headers"}->{"x-github-event"}};
     $body = from_json($body);
     my $branch = $c->app->config->{"branch"};
     my $host = $c->app->config->{"host"};
-    if (@{$event} eq 'push' && $body->{ref} eq "/refs/heads/".$branch) {
+    if ($body->{ref} eq "/refs/heads/".$branch && $event eq "push") {
       $c->start_deployment($body, $branch, $host);
     }
     $c->render(status => 200, openapi => {message => "success"});
@@ -47,7 +46,6 @@ sub create_deployment {
   my ($path, $params) = @_;
   try {
     my $ua = Mojo::UserAgent->new;
-    print Data::Dumper::Dumper $params;
     my $tx = $ua->post($path => json => $params);
   } catch {
     $self->app->log->error($_);
