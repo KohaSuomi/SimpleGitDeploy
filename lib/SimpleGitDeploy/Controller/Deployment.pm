@@ -36,7 +36,7 @@ sub start_deployment {
 
   my $user = $push_request->{"sender"}->{"login"};
 
-  my $payload = {environment => $branch, deploy_user => $user};
+  my $payload = {deploy_state => 'pending', deploy_user => $user};
   my $params = {ref => $branch, payload => $payload, description => "Deploying to production server"};
 
   my $path = $host.'/repos/'.$push_request->{"repository"}->{"full_name"}.'/deployments';
@@ -51,9 +51,19 @@ sub process_deployment {
 
   $self->app->log->debug('Processing the deployment');
 
-  my $params = {state:"pending", description: "Deployment in pending state"};
+  my $deployment_id = $deployment->{"deployment"}->{"id"};
 
-  my $path = $host.'/repos/'.$deployment->{"repository"}->{"full_name"}.'/deployments/'.$deployment->{"id"}.'/statuses';
+  my $state = $deployment->{"deployment"}->{"payload"}->{"deploy_state"};
+
+  my $params;
+
+  if($state) {
+    $params = {state => $state, description => "Pending deployment"};
+  } else {
+    $params = {state => "success", description => "Deployment succesfully finished!"};
+  }
+
+  my $path = $host.'/repos/'.$deployment->{"repository"}->{"full_name"}.'/deployments/'.$deployment_id.'/statuses';
 
   $self->send_deployment($path, $token, $params);
 
