@@ -60,7 +60,7 @@ sub process_deployment {
   if($state) {
     $params = {state => $state, description => "Pending deployment"};
   } else {
-    $params = {state => "success", description => "Deployment ".$deployment_id." succesfully finished!"};
+    $params = {state => "success", description => "Deployment succesfully finished!"};
   }
 
   my $path = $host.'/repos/'.$deployment->{"repository"}->{"full_name"}.'/deployments/'.$deployment_id.'/statuses';
