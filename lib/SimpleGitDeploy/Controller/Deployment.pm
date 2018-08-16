@@ -46,14 +46,14 @@ sub start_deployment {
 }
 
 sub process_deployment {
-  $self = shift;
+  my $self = shift;
   my ($deployment, $branch, $host, $token) = @_;
 
   $self->app->log->debug('Processing the deployment');
 
-  $params = "pending";
+  my $params = {state:"pending", description: "Deployment in pending state"};
 
-  my $path = $host.'/repos/'.$deployment->{"repository"}->{"full_name"}.'/deployments/'$deployment->{"id"};
+  my $path = $host.'/repos/'.$deployment->{"repository"}->{"full_name"}.'/deployments/'.$deployment->{"id"}.'/statuses';
 
   $self->send_deployment($path, $token, $params);
 
