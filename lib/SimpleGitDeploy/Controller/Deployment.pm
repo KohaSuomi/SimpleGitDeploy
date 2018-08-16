@@ -1,6 +1,7 @@
 package SimpleGitDeploy::Controller::Deployment;
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::UserAgent;
+use SimpleGitDeploy::Model::ServerDeploy;
 
 use JSON;
 use Try::Tiny;
@@ -19,6 +20,8 @@ sub event {
       $c->start_deployment($body, $branch, $host, $token);
     } elsif ($event eq "deployment") {
       $c->process_deployment($body, $branch, $host, $token);
+    } elsif ($event eq "deployment_status") {
+      $c->SimpleGitDeploy::Model::ServerDeploy::push;
     }
     $c->render(status => 200, openapi => {message => "success"});
   } catch {

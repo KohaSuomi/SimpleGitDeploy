@@ -8,6 +8,6 @@ BEGIN { unshift @INC, "$FindBin::Bin/../lib" }
 
 my $t = Test::Mojo->new('SimpleGitDeploy');
 my $json = '{"ref": "/refs/heads/master", "repository":{"full_name":"KohaSuomi/SimpleGitDeploy"}, "sender":{"login":"johannaraisa"}}';
-$t->post_ok('/api/event_handler', $json)->status_is(200)->json_is({status => "success"});
+$t->post_ok('/api/event_handler', $json)->status_is(200)->json_is({message => "success"});
 
 done_testing();
