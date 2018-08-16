@@ -13,8 +13,12 @@ sub event {
     $body = from_json($body);
     my $branch = $c->app->config->{"branch"};
     my $host = $c->app->config->{"host"};
-    if ($body->{ref} eq "/refs/heads/".$branch && $event eq "push") {
-      $c->start_deployment($body, $branch, $host);
+    my $token = $c->app->config->{"token"};
+    my $ref = (split '/', $body->{ref})[-1];
+    if ($ref eq $branch && $event eq "push") {
+      $c->start_deployment($body, $branch, $host, $token);
+    } elsif ($event eq "deployment") {
+      $c->process_deployment($body, $branch, $host, $token);
     }
     $c->render(status => 200, openapi => {message => "success"});
   } catch {
@@ -26,7 +30,7 @@ sub event {
 
 sub start_deployment {
   my $self = shift;
-  my ($push_request, $branch, $host) = @_;
+  my ($push_request, $branch, $host, $token) = @_;
 
   $self->app->log->debug('Starting the deployment');
 
@@ -37,16 +41,31 @@ sub start_deployment {
 
   my $path = $host.'/repos/'.$push_request->{"repository"}->{"full_name"}.'/deployments';
 
-  $self->create_deployment($path, $params);
+  $self->send_deployment($path, $token, $params);
   
 }
 
-sub create_deployment {
+sub process_deployment {
+  $self = shift;
+  my ($deployment, $branch, $host, $token) = @_;
+
+  $self->app->log->debug('Processing the deployment');
+
+  $params = "pending";
+
+  my $path = $host.'/repos/'.$deployment->{"repository"}->{"full_name"}.'/deployments/'$deployment->{"id"};
+
+  $self->send_deployment($path, $token, $params);
+
+}
+
+sub send_deployment {
   my $self = shift;
-  my ($path, $params) = @_;
+  my ($path, $token, $params) = @_;
   try {
     my $ua = Mojo::UserAgent->new;
-    my $tx = $ua->post($path => json => $params);
+    my $tx = $ua->post($path => {Authorization => 'token '.$token} => json => $params);
+    print Data::Dumper::Dumper $tx->res->body;
   } catch {
     $self->app->log->error($_);
   }
