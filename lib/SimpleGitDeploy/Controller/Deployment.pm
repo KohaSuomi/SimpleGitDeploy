@@ -21,7 +21,10 @@ sub event {
     } elsif ($event eq "deployment") {
       $c->process_deployment($body, $branch, $host, $token);
     } elsif ($event eq "deployment_status") {
-      $c->SimpleGitDeploy::Model::ServerDeploy::push;
+      my $status = $c->SimpleGitDeploy::Model::ServerDeploy::pull;
+      $body->{"deployment"}->{"payload"}->{"deploy_state"} = $status;
+      print Data::Dumper::Dumper $body->{"deployment"}->{"payload"}->{"deploy_state"};
+      $c->process_deployment($body, $branch, $host, $token);
     }
     $c->render(status => 200, openapi => {message => "success"});
   } catch {
@@ -58,13 +61,7 @@ sub process_deployment {
 
   my $state = $deployment->{"deployment"}->{"payload"}->{"deploy_state"};
 
-  my $params;
-
-  if($state) {
-    $params = {state => $state, description => "Pending deployment"};
-  } else {
-    $params = {state => "success", description => "Deployment succesfully finished!"};
-  }
+  my $params = {state => $state, description => "Deployment state is ".$state};
 
   my $path = $host.'/repos/'.$deployment->{"repository"}->{"full_name"}.'/deployments/'.$deployment_id.'/statuses';
 
