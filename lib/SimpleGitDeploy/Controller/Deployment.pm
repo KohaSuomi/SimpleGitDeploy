@@ -2,6 +2,7 @@ package SimpleGitDeploy::Controller::Deployment;
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::UserAgent;
 use SimpleGitDeploy::Model::ServerDeploy;
+use SimpleGitDeploy::Model::SendMessage;
 
 use JSON;
 use Try::Tiny;
@@ -16,17 +17,20 @@ sub event {
     my $host = $c->app->config->{"host"};
     my $token = $c->app->config->{"token"};
     my $ref = (split '/', $body->{ref})[-1];
+    my $message;
+
     if ($ref eq $branch && $event eq "push") {
-      $c->start_deployment($body, $branch, $host, $token);
+      $message = $c->start_deployment($body, $branch, $host, $token);
     } elsif ($event eq "deployment") {
-      $c->process_deployment($body, $branch, $host, $token);
+      $message = $c->process_deployment($body, $branch, $host, $token);
     } elsif ($event eq "deployment_status") {
       my $status = $c->SimpleGitDeploy::Model::ServerDeploy::pull;
       $body->{"deployment"}->{"payload"}->{"deploy_state"} = $status;
-      print Data::Dumper::Dumper $body->{"deployment"}->{"payload"}->{"deploy_state"};
-      $c->process_deployment($body, $branch, $host, $token);
+      $message = $c->process_deployment($body, $branch, $host, $token);
+      my $sender = SimpleGitDeploy::Model::SendMessage->new({config => $c->app->config});
+      $sender->send_message($status);
     }
-    $c->render(status => 200, openapi => {message => "success"});
+    $c->render(status => 200, openapi => {event => $event, message => $message});
   } catch {
     my $e = $_;
     $c->app->log->error($e);
@@ -47,7 +51,7 @@ sub start_deployment {
 
   my $path = $host.'/repos/'.$push_request->{"repository"}->{"full_name"}.'/deployments';
 
-  $self->send_deployment($path, $token, $params);
+  return $self->send_deployment($path, $token, $params);
   
 }
 
@@ -65,7 +69,7 @@ sub process_deployment {
 
   my $path = $host.'/repos/'.$deployment->{"repository"}->{"full_name"}.'/deployments/'.$deployment_id.'/statuses';
 
-  $self->send_deployment($path, $token, $params);
+  return $self->send_deployment($path, $token, $params);
 
 }
 
@@ -74,10 +78,11 @@ sub send_deployment {
   my ($path, $token, $params) = @_;
   try {
     my $ua = Mojo::UserAgent->new;
-    my $tx = $ua->post($path => {Authorization => 'token '.$token} => json => $params);
-    print Data::Dumper::Dumper $tx->res->body;
+    #my $tx = $ua->post($path => {Authorization => 'token '.$token} => json => $params);
+    return "success";
   } catch {
     $self->app->log->error($_);
+    return $_;
   }
 }
 
