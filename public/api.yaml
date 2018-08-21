@@ -18,10 +18,18 @@ paths:
           type: object
       responses:
         200:
-          description: Deployment event handler success
+          description: Ok status
+          schema:
+            type: object
+        202:
+          description: Accepted
           schema:
             type: object
         500:
-          description: Deployment event handler error
+          description: Internal server error
+          schema:
+            type: object
+        501:
+          description: Not implemented
           schema:
             type: object

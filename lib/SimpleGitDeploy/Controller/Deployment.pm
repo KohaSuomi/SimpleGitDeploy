@@ -19,31 +19,42 @@ sub event {
     my $token = $c->app->config->{"token"};
     my $ref = (split '/', $body->{ref})[-1];
     my $message;
+      
+    if ($branch && $host && $token) {
 
-    my $deploy = SimpleGitDeploy::Model::RemoteDeploy->new({config => $c->app->config});
+      my $deploy = SimpleGitDeploy::Model::RemoteDeploy->new({config => $c->app->config});
 
-    if (defined $ref && $ref eq $branch && $event eq "push") {
+      if (defined $ref && $ref eq $branch && $event eq "push") {
 
-      $message = $deploy->start_deployment($body, $branch, $host, $token);
+        $message = $deploy->start_deployment($body, $branch, $host, $token);
 
-    } elsif ($event eq "deployment") {
+      } elsif ($event eq "deployment") {
 
-      $message = $c->process_deployment($body, $branch, $host, $token);
+        $message = $deploy->process_deployment($body, $branch, $host, $token);
 
-    } elsif ($event eq "deployment_status") {
+      } elsif ($event eq "deployment_status") {
 
-      my $server = SimpleGitDeploy::Model::ServerDeploy->new({config => $c->app->config});
-      my $status = $server->pull;
+        my $server = SimpleGitDeploy::Model::ServerDeploy->new({config => $c->app->config});
+        my $status = $server->pull;
 
-      $body->{"deployment"}->{"payload"}->{"deploy_state"} = $status;
-      $message = $deploy->process_deployment($body, $branch, $host, $token);
+        $body->{"deployment"}->{"payload"}->{"deploy_state"} = $status;
+        $message = $deploy->process_deployment($body, $branch, $host, $token);
 
-      my $sender = SimpleGitDeploy::Model::SendMessage->new({config => $c->app->config});
-      $sender->send_message($status);
+        my $sender = SimpleGitDeploy::Model::SendMessage->new({config => $c->app->config});
+        $sender->send_message($status);
 
+      }
+      if ($message) {
+        $c->render(status => 200, openapi => {event => $event, message => $message});
+      } else {
+        $c->render(status => 202, openapi => {event => $event, message => "Accepted"});
+      }
+      
+
+    } else {
+      $c->app->log->error("Configuration file missing");
+      $c->render(status => 501, openapi => {event => $event, message => 'Not implemented'});
     }
-
-    $c->render(status => 200, openapi => {event => $event, message => $message});
   
   } catch {
     my $e = $_;
