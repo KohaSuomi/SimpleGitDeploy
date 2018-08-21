@@ -1,6 +1,6 @@
 package SimpleGitDeploy::Controller::Deployment;
 use Mojo::Base 'Mojolicious::Controller';
-use Mojo::UserAgent;
+use SimpleGitDeploy::Model::RemoteDeploy;
 use SimpleGitDeploy::Model::ServerDeploy;
 use SimpleGitDeploy::Model::SendMessage;
 
@@ -9,6 +9,7 @@ use Try::Tiny;
 
 sub event {
   my $c = shift->openapi->valid_input or return;
+
   try {
     my $body =  $c->req->body;
     my $event = shift @{$c->req->headers->{"headers"}->{"x-github-event"}};
@@ -19,70 +20,35 @@ sub event {
     my $ref = (split '/', $body->{ref})[-1];
     my $message;
 
-    if ($ref eq $branch && $event eq "push") {
-      $message = $c->start_deployment($body, $branch, $host, $token);
+    my $deploy = SimpleGitDeploy::Model::RemoteDeploy->new({config => $c->app->config});
+
+    if (defined $ref && $ref eq $branch && $event eq "push") {
+
+      $message = $deploy->start_deployment($body, $branch, $host, $token);
+
     } elsif ($event eq "deployment") {
+
       $message = $c->process_deployment($body, $branch, $host, $token);
+
     } elsif ($event eq "deployment_status") {
-      my $status = $c->SimpleGitDeploy::Model::ServerDeploy::pull;
+
+      my $server = SimpleGitDeploy::Model::ServerDeploy->new({config => $c->app->config});
+      my $status = $server->pull;
+
       $body->{"deployment"}->{"payload"}->{"deploy_state"} = $status;
-      $message = $c->process_deployment($body, $branch, $host, $token);
+      $message = $deploy->process_deployment($body, $branch, $host, $token);
+
       my $sender = SimpleGitDeploy::Model::SendMessage->new({config => $c->app->config});
       $sender->send_message($status);
+
     }
+
     $c->render(status => 200, openapi => {event => $event, message => $message});
+  
   } catch {
     my $e = $_;
     $c->app->log->error($e);
     $c->render(status => 500, openapi => {error => $e});
-  }
-}
-
-sub start_deployment {
-  my $self = shift;
-  my ($push_request, $branch, $host, $token) = @_;
-
-  $self->app->log->debug('Starting the deployment');
-
-  my $user = $push_request->{"sender"}->{"login"};
-
-  my $payload = {deploy_state => 'pending', deploy_user => $user};
-  my $params = {ref => $branch, payload => $payload, description => "Deploying to production server"};
-
-  my $path = $host.'/repos/'.$push_request->{"repository"}->{"full_name"}.'/deployments';
-
-  return $self->send_deployment($path, $token, $params);
-  
-}
-
-sub process_deployment {
-  my $self = shift;
-  my ($deployment, $branch, $host, $token) = @_;
-
-  $self->app->log->debug('Processing the deployment');
-
-  my $deployment_id = $deployment->{"deployment"}->{"id"};
-
-  my $state = $deployment->{"deployment"}->{"payload"}->{"deploy_state"};
-
-  my $params = {state => $state, description => "Deployment state is ".$state};
-
-  my $path = $host.'/repos/'.$deployment->{"repository"}->{"full_name"}.'/deployments/'.$deployment_id.'/statuses';
-
-  return $self->send_deployment($path, $token, $params);
-
-}
-
-sub send_deployment {
-  my $self = shift;
-  my ($path, $token, $params) = @_;
-  try {
-    my $ua = Mojo::UserAgent->new;
-    #my $tx = $ua->post($path => {Authorization => 'token '.$token} => json => $params);
-    return "success";
-  } catch {
-    $self->app->log->error($_);
-    return $_;
   }
 }
 

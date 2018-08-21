@@ -8,6 +8,7 @@ use Mojo::Log;
 
 sub new {
     my ($class, $self) = @_;
+    $self = {} unless(ref($self) eq 'HASH');
     bless $self, $class;
 
     $self->{log} = Mojo::Log->new(path => $self->{"config"}->{"logs"}, level => 'debug');
@@ -21,12 +22,11 @@ sub send_message {
 
     try {
         my $body = $self->create_body($status);
-        print Data::Dumper::Dumper $body;
         if ($self->{config}->{"messageType"} eq "email") {
             foreach my $email (@{$self->{config}->{"emails"}}) {
                 my $message = $self->create_email($body, $email);
                 sendmail($message);
-                $self->{log}->debug('Email sended to '. $email->{"to"});
+                $self->{log}->debug('Email sent to '. $email->{"to"});
             }
         }
     } catch {
