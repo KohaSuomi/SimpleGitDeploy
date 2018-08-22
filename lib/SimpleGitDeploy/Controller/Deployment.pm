@@ -32,18 +32,18 @@ sub event {
 
         $message = $deploy->process_deployment($body, $branch, $host, $token);
 
-      } elsif ($event eq "deployment_status") {
+      } elsif ($event eq "deployment_status" && $body->{"deployment_status"}->{"state"} eq "processing") {
 
         my $server = SimpleGitDeploy::Model::ServerDeploy->new({config => $c->app->config});
         my $status = $server->pull;
 
-        $body->{"deployment"}->{"payload"}->{"deploy_state"} = $status;
-        $message = $deploy->process_deployment($body, $branch, $host, $token);
+        $message = $status;
 
         my $sender = SimpleGitDeploy::Model::SendMessage->new({config => $c->app->config});
         $sender->send_message($status);
 
       }
+      
       if ($message) {
         $c->render(status => 200, openapi => {event => $event, message => $message});
       } else {
