@@ -15,12 +15,12 @@ sub event {
     my $body =  $c->req->body;
     my $event = shift @{$c->req->headers->{"headers"}->{"x-github-event"}};
     my $signature = shift @{$c->req->headers->{"headers"}->{"x-hub-signature"}};
-    $signature = Digest::SHA::sha1_hex($signature);
+    my $secret = $c->app->config->{"secret"};
+    $secret = "sha1=".Digest::SHA::sha1_hex($body, $secret);
     $body = from_json($body);
     my $branch = $c->app->config->{"branch"};
     my $host = $c->app->config->{"host"};
     my $token = $c->app->config->{"token"};
-    my $secret = $c->app->config->{"secret"};
     my $ref = (split '/', $body->{ref})[-1];
     my $message;
       
