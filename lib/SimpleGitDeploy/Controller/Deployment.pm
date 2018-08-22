@@ -32,7 +32,7 @@ sub event {
 
         $message = $deploy->process_deployment($body, $branch, $host, $token);
 
-      } elsif ($event eq "deployment_status" && $body->{"deployment_status"}->{"state"} eq "processing") {
+      } elsif ($event eq "deployment_status" && $body->{"deployment_status"}->{"state"} eq "pending") {
 
         my $server = SimpleGitDeploy::Model::ServerDeploy->new({config => $c->app->config});
         my $status = $server->pull;

@@ -49,7 +49,7 @@ my $deployment_event = {
     };
 
 my $deployment_status_event = {
-    deployment_status => {state => "processing"}
+    deployment_status => {state => "pending"}
     };
     
 
