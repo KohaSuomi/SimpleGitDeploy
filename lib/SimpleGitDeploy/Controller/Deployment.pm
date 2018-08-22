@@ -6,6 +6,7 @@ use SimpleGitDeploy::Model::SendMessage;
 
 use JSON;
 use Try::Tiny;
+use Digest::SHA;
 
 sub event {
   my $c = shift->openapi->valid_input or return;
@@ -14,6 +15,7 @@ sub event {
     my $body =  $c->req->body;
     my $event = shift @{$c->req->headers->{"headers"}->{"x-github-event"}};
     my $signature = shift @{$c->req->headers->{"headers"}->{"x-hub-signature"}};
+    $signature = Digest::SHA::sha1_hex($signature);
     $body = from_json($body);
     my $branch = $c->app->config->{"branch"};
     my $host = $c->app->config->{"host"};
