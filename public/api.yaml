@@ -25,6 +25,10 @@ paths:
           description: Accepted
           schema:
             type: object
+        401:
+          description: Unauthorized
+          schema:
+            type: object
         500:
           description: Internal server error
           schema:

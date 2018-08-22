@@ -13,14 +13,16 @@ sub event {
   try {
     my $body =  $c->req->body;
     my $event = shift @{$c->req->headers->{"headers"}->{"x-github-event"}};
+    my $signature = shift @{$c->req->headers->{"headers"}->{"x-hub-signature"}};
     $body = from_json($body);
     my $branch = $c->app->config->{"branch"};
     my $host = $c->app->config->{"host"};
     my $token = $c->app->config->{"token"};
+    my $secret = $c->app->config->{"secret"};
     my $ref = (split '/', $body->{ref})[-1];
     my $message;
       
-    if ($branch && $host && $token) {
+    if ($branch && $host && $token && $signature eq $secret) {
 
       my $deploy = SimpleGitDeploy::Model::RemoteDeploy->new({config => $c->app->config});
 
@@ -51,9 +53,11 @@ sub event {
       }
       
 
-    } else {
+    } elsif ($signature eq $secret) {
       $c->app->log->error("Configuration file missing");
       $c->render(status => 501, openapi => {event => $event, message => 'Not implemented'});
+    } else {
+      $c->render(status => 401, openapi => {event => $event, message => 'Unauthorized'});
     }
   
   } catch {
