@@ -45,7 +45,7 @@ my $deployment_event = {
     description => "Deploying to production server",
     environment => "dev", 
     ref => "dev",
-    payload => {deploy_user => "tester", deploy_state => "processing"}
+    payload => {deploy_user => "tester", deploy_state => "pending"}
     };
 
 my $deployment_status_event = {
