@@ -42,10 +42,14 @@ $t->request_ok($tx)
   ->json_is({event => 'push', message => "success"});
 
 my $deployment_event = {
-    description => "Deploying to production server","environment", 
+    description => "Deploying to production server",
     environment => "dev", 
     ref => "dev",
-    payload => {deploy_user => "tester", deploy_state => "pending"}
+    payload => {deploy_user => "tester", deploy_state => "processing"}
+    };
+
+my $deployment_status_event = {
+    deployment_status => {state => "processing"}
     };
     
 
@@ -55,7 +59,7 @@ $t->request_ok($tx)
   ->json_is({event => 'deployment', message => "success"});
     
 
-$tx = $t->ua->build_tx(POST => '/api/event_handler' => {"X-GitHub-Event" => "deployment_status"} => json => $deployment_event);
+$tx = $t->ua->build_tx(POST => '/api/event_handler' => {"X-GitHub-Event" => "deployment_status"} => json => $deployment_status_event);
 $t->request_ok($tx)
   ->status_is(200)
   ->json_is({event => 'deployment_status', message => "success"});
