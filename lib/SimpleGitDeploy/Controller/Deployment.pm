@@ -16,7 +16,7 @@ sub event {
     my $event = shift @{$c->req->headers->{"headers"}->{"x-github-event"}};
     my $signature = shift @{$c->req->headers->{"headers"}->{"x-hub-signature"}};
     my $secret = $c->app->config->{"secret"};
-    $secret = "sha1=".Digest::SHA::sha1_hex($body, $secret);
+    $secret = "sha1=".Digest::SHA::hmac_sha1_hex($body, $secret);
     $body = from_json($body);
     my $branch = $c->app->config->{"branch"};
     my $host = $c->app->config->{"host"};

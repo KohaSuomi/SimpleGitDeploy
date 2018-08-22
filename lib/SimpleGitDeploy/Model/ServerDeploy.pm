@@ -24,7 +24,10 @@ sub pull {
         my $last_commit = $repo->command("rev-parse", "HEAD");
         $last_commit =~ s/^\s+|\s+$//g;
         my $output = $repo->command("pull", $remote, $branch);
-        $self->{log}->debug($output);
+        if ($output =~ /Already up-to-date./i) {
+            return "success";
+        }
+        $self->{log}->info($output);
         my $run = $self->SimpleGitDeploy::Model::ServerDeploy::run_scripts;
         unless ($run) {
             $repo->command('reset', '--hard', $last_commit);
