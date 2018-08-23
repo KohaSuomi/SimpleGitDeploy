@@ -2,6 +2,8 @@ use Mojo::Base -strict;
 
 use Test::More;
 use Test::Mojo;
+use Digest::SHA;
+use Mojo::JSON qw(encode_json);
 
 use FindBin;
 BEGIN { unshift @INC, "$FindBin::Bin/../lib" }
@@ -31,16 +33,20 @@ my $config = {
 
 my $t = Test::Mojo->new('SimpleGitDeploy', $config);
 
+my $sha;
+
 my $push_event = {
     ref => "/refs/heads/dev", 
     repository => {full_name => "KohaSuomi/SimpleGitDeploy"}, 
     sender => {login => "tester"}
     };
 
-my $tx = $t->ua->build_tx(POST => '/api/event_handler' => {"X-GitHub-Event" => "push", "X-HUB-SIGNATURE" => "1234"} => json => $push_event);
+$sha = "sha1=".Digest::SHA::hmac_sha1_hex(encode_json($push_event), $t->app->config->{secret});
+
+my $tx = $t->ua->build_tx(POST => '/api/event_handler' => {"X-GitHub-Event" => "push", "X-HUB-SIGNATURE" => $sha} => json => $push_event);
 $t->request_ok($tx)
   ->status_is(200)
-  ->json_is({event => 'push', message => "success"});
+  ->json_is({event => 'push', message => "Success"});
 
 my $deployment_event = {
     description => "Deploying to production server",
@@ -53,34 +59,24 @@ my $deployment_status_event = {
     deployment_status => {state => "pending"}
     };
     
+$sha = "sha1=".Digest::SHA::hmac_sha1_hex(encode_json($deployment_event), $t->app->config->{secret});
 
-$tx = $t->ua->build_tx(POST => '/api/event_handler' => {"X-GitHub-Event" => "deployment", "X-HUB-SIGNATURE" => "1234"} => json => $deployment_event);
+$tx = $t->ua->build_tx(POST => '/api/event_handler' => {"X-GitHub-Event" => "deployment", "X-HUB-SIGNATURE" => $sha} => json => $deployment_event);
 $t->request_ok($tx)
   ->status_is(200)
-  ->json_is({event => 'deployment', message => "success"});
+  ->json_is({event => 'deployment', message => "Success"});
     
+$sha = "sha1=".Digest::SHA::hmac_sha1_hex(encode_json($deployment_status_event), $t->app->config->{secret});
 
-$tx = $t->ua->build_tx(POST => '/api/event_handler' => {"X-GitHub-Event" => "deployment_status", "X-HUB-SIGNATURE" => "1234"} => json => $deployment_status_event);
+$tx = $t->ua->build_tx(POST => '/api/event_handler' => {"X-GitHub-Event" => "deployment_status", "X-HUB-SIGNATURE" => $sha} => json => $deployment_status_event);
 $t->request_ok($tx)
   ->status_is(200)
-  ->json_is({event => 'deployment_status', message => "success"});
-
-$push_event->{ref} = "/refs/heads/master";
-
-$tx = $t->ua->build_tx(POST => '/api/event_handler' => {"X-GitHub-Event" => "push", "X-HUB-SIGNATURE" => "1234"} => json => $push_event);
-$t->request_ok($tx)
-  ->status_is(202)
-  ->json_is({event => 'push', message => "Accepted"});
-
-$t->app->config->{branch} = undef;
+  ->json_is({event => 'deployment_status', message => "Success"});
 
 
-$tx = $t->ua->build_tx(POST => '/api/event_handler' => {"X-GitHub-Event" => "push", "X-HUB-SIGNATURE" => "1234"} => json => $push_event);
-$t->request_ok($tx)
-  ->status_is(501)
-  ->json_is({event => 'push', message => "Not implemented"});
+$sha = "sha1=".Digest::SHA::hmac_sha1_hex(encode_json($deployment_status_event), '4444');
 
-$tx = $t->ua->build_tx(POST => '/api/event_handler' => {"X-GitHub-Event" => "push", "X-HUB-SIGNATURE" => "444"} => json => $push_event);
+$tx = $t->ua->build_tx(POST => '/api/event_handler' => {"X-GitHub-Event" => "push", "X-HUB-SIGNATURE" => $sha} => json => $push_event);
 $t->request_ok($tx)
   ->status_is(401)
   ->json_is({event => 'push', message => "Unauthorized"});
