@@ -33,7 +33,7 @@ sub pull {
         unless ($run) {
             $repo->command('reset', '--hard', $last_commit);
             $self->{log}->warn("Rollback commits!");
-            return "failed";
+            return "failure";
         } else {
             return "success";
         }
@@ -41,7 +41,7 @@ sub pull {
         my $e = $_;
         $self->{log}->error($e);
         $self->{log}->error("Conflict while pulling, aborting!");
-        return "failed";
+        return "failure";
     }
 }
 
