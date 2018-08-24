@@ -9,6 +9,7 @@ DEPS=( \
   "Email::MIME" \
   "Email::Sender::Simple" \
   "JSON" \
+  "Proc::Simple" \
   
 )
 
