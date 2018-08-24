@@ -22,7 +22,7 @@ sub send_message {
 
     try {
         my $body = $self->create_body($status);
-        if ($self->{config}->{"messageType"} eq "email") {
+        if ($self->{config}->{"message_type"} eq "email") {
             foreach my $email (@{$self->{config}->{"emails"}}) {
                 my $message = $self->create_email($body, $email);
                 sendmail($message);

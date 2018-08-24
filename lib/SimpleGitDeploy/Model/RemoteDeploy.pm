@@ -9,7 +9,7 @@ sub new {
     $self = {} unless(ref($self) eq 'HASH');
     bless $self, $class;
 
-    $self->{log} = Mojo::Log->new(path => $self->{"config"}->{"logs"}, level => 'debug');
+    $self->{log} = Mojo::Log->new(path => $self->{"config"}->{"logs"}, level => $self->{"config"}->{"log_level"});
 
     return $self;
 }
@@ -19,7 +19,7 @@ sub start_deployment {
   my $self = shift;
   my ($push_request, $branch, $host, $token) = @_;
 
-  $self->{log}->debug('Starting the deployment');
+  $self->{log}->info('Starting the deployment');
 
   my $user = $push_request->{"sender"}->{"login"};
 
@@ -36,7 +36,7 @@ sub process_deployment {
   my $self = shift;
   my ($deployment, $branch, $host, $token) = @_;
 
-  $self->{log}->debug('Processing the deployment');
+  $self->{log}->info('Processing the deployment');
 
   my $deployment_id = $deployment->{"deployment"}->{"id"};
 

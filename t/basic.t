@@ -17,16 +17,25 @@ my $config = {
         host    => 'https://api.example.com',
         token   => '234545366',
         logs    => '../mojo.log',
-        messageType => 'email',
+        log_level => 'debug',
+        message_type => 'email',
         emails  => [{
             from => 'test@example.com',
             to   => 'myemail@example.com',
             subject => 'Update finished',
         }],
-        scripts => [
+        pre_scripts => [
             {
             name => 'Load',
-            path => 'curl https://www.google.com'
+            command => 'curl',
+            path => 'https://www.google.com'
+            }
+        ],
+        post_scripts => [
+            {
+            name => 'Load',
+            command => 'curl',
+            path => 'https://www.google.com'
             }
         ]
     };
@@ -58,7 +67,7 @@ my $deployment_event = {
 my $deployment_status_event = {
     deployment_status => {state => "pending"}
     };
-    
+
 $sha = "sha1=".Digest::SHA::hmac_sha1_hex(encode_json($deployment_event), $t->app->config->{secret});
 
 $tx = $t->ua->build_tx(POST => '/api/event_handler' => {"X-GitHub-Event" => "deployment", "X-HUB-SIGNATURE" => $sha} => json => $deployment_event);
@@ -80,6 +89,5 @@ $tx = $t->ua->build_tx(POST => '/api/event_handler' => {"X-GitHub-Event" => "pus
 $t->request_ok($tx)
   ->status_is(401)
   ->json_is({event => 'push', message => "Unauthorized"});
-
 
 done_testing();

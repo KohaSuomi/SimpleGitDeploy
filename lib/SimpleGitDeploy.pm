@@ -8,7 +8,7 @@ sub startup {
   my $self = shift;
 
   my $config = $self->plugin('Config');
-  my $log = Mojo::Log->new(path => $config->{logs}, level => 'debug');
+  my $log = Mojo::Log->new(path => $config->{logs}, level => $config->{log_level});
   $self->config($config);
   $self->log($log);
 

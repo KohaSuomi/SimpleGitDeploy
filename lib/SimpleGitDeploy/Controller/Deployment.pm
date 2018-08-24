@@ -46,6 +46,10 @@ sub event {
 
         my $sender = SimpleGitDeploy::Model::SendMessage->new({config => $c->app->config});
         $sender->send_message($body->{"deployment_status"}->{"state"});
+        if ($body->{"deployment_status"}->{"state"} eq "success") {
+          my $server = SimpleGitDeploy::Model::ServerDeploy->new({config => $c->app->config});
+          $server->run_scripts('post');
+        }
 
       }
       $c->render(status => 200, openapi => {event => $event, message => "Success"});
