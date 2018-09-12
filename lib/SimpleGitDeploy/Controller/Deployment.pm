@@ -31,7 +31,8 @@ sub event {
       if (defined $ref && $ref eq $branch && $event eq "push") {
 
         $deploy->start_deployment($body, $branch, $host, $token);
-
+      } elsif ($body->{"deployment"}->{"payload"}->{"deploy_environment"} ne $c->app->config->{"environment"}){
+        $c->render(status => 403, openapi => {event => $event, message => 'Forbidden'});
       } elsif ($event eq "deployment") {
 
         $deploy->process_deployment($body, $branch, $host, $token);

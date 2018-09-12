@@ -29,6 +29,10 @@ paths:
           description: Unauthorized
           schema:
             type: object
+        403:
+          description: Forbidden
+          schema:
+            type: object
         500:
           description: Internal server error
           schema:
