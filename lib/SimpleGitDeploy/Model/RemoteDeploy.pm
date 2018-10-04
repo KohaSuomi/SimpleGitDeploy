@@ -23,7 +23,7 @@ sub start_deployment {
 
   my $user = $push_request->{"sender"}->{"login"};
 
-  my $payload = {deploy_state => 'pending', deploy_user => $user};
+  my $payload = {deploy_state => 'pending', deploy_user => $user, deploy_environment => $self->{config}->{"environment"}};
   my $params = {ref => $branch, auto_merge => Mojo::JSON->false, payload => $payload, description => "Deploying to production server"};
 
   my $path = $host.'/repos/'.$push_request->{"repository"}->{"full_name"}.'/deployments';
