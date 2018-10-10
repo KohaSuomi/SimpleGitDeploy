@@ -46,7 +46,7 @@ sub event {
       } elsif ($event eq "deployment_status") {
 
         my $sender = SimpleGitDeploy::Model::SendMessage->new({config => $c->app->config});
-        $sender->send_message($body->{"deployment_status"}->{"state"});
+        $sender->send_message($body);
         if ($body->{"deployment_status"}->{"state"} eq "success") {
           my $server = SimpleGitDeploy::Model::ServerDeploy->new({config => $c->app->config});
           $server->run_scripts('post');

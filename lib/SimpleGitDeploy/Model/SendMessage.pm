@@ -18,10 +18,10 @@ sub new {
 
 
 sub send_message {
-    my ($self, $status) = @_;
+    my ($self, $res) = @_;
 
     try {
-        my $body = $self->create_body($status);
+        my $body = $self->create_body($res);
         if ($self->{config}->{"message_type"} eq "email") {
             foreach my $email (@{$self->{config}->{"emails"}}) {
                 my $message = $self->create_email($body, $email);
@@ -59,9 +59,10 @@ sub create_email {
 
 sub create_body {
     my $self = shift;
-    my ($status) = @_;
+    my ($res) = @_;
 
-    my $body = $self->{config}->{"environment"}." branch ".$self->{config}->{"branch"}." update status: ".$status."\n";
+    my $body = $self->{config}->{"environment"}." branch ".$self->{config}->{"branch"}." update status: ".$res->{"deployment_status"}->{"state"}."\n";
+    $body .= "Updated from ".$res->{"deployment"}->{"payload"}->{"deployd_before"}." to ". $res->{"deployment"}->{"sha"};
 
     return $body;
 }
