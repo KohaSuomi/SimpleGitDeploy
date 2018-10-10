@@ -62,7 +62,7 @@ sub create_body {
     my ($res) = @_;
 
     my $body = $self->{config}->{"environment"}." branch ".$self->{config}->{"branch"}." update status: ".$res->{"deployment_status"}->{"state"}."\n";
-    $body .= "Updated from ".$res->{"deployment"}->{"payload"}->{"deployd_before"}." to ". $res->{"deployment"}->{"sha"};
+    $body .= "Updated from ".$res->{"deployment"}->{"payload"}->{"deployd_before"}." to ". $res->{"deployment"}->{"sha"}."\n";
 
     return $body;
 }
