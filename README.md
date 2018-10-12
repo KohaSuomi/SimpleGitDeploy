@@ -25,7 +25,18 @@ Proc::Simple
 
 ### Config file
 
-Add content to simple_git_deploy.conf. You can define pre and post scripts which are triggered on at the first stage of the update and when everything is fully finished.
+Add content to simple_git_deploy.conf. 
+
+* Define hypnotoad port.
+* Secret is for Github authentication.
+* Give a name of the environment.
+* Which repo you want to update
+* Which branch the tool is listening.
+* Github's API path.
+* Token from Github which is used for authentication. Can be created from your profile.
+* Where to write the logs and level.
+* Where to send information about the update.
+* You can define pre and post scripts which are triggered on at the first stage of the update and when everything is fully finished. Scripts are automatically loaded on the background but there is an option to wait some process to be finished by adding wait parameter.
 
 ```
 {
@@ -47,19 +58,38 @@ Add content to simple_git_deploy.conf. You can define pre and post scripts which
   }],
   pre_scripts => [
     {
+      command => 'sudo',
       name => 'Update database',
-      path => '/home/foo/Foo/updatedatabase.sh'
+      path => '/home/foo/Foo/updatedatabase.sh',
+      wait => 1
     }
   ],
-  post_scripts => [
-    {
-      name => 'Reload server',
-      path => '/home/foo/Foo/server-reload.sh'
+  post_scripts => [ {
+      name => 'Memcached restart',
+      command => 'sudo',
+      path => '/etc/init.d/memcached',
+      params => 'restart'
+    }, {
+      name => 'Plack reload',
+      command => 'sudo',
+      path => '/etc/init.d/koha-plack-daemon',
+      params => 'reload'
     }
   ]
 }
 
 ```
+
+### Adding service to Apache
+
+Service can be added to Apache along other services. You can use proxy pass for this.
+
+```
+ProxyPass /event_handler http://localhost:8081/api/event_handler keepalive=On
+ProxyPassReverse /event_handler http://localhost:8081/api/event_handler
+
+```
+
 
 ### Install server daemon
 
@@ -69,3 +99,14 @@ sudo update-rc.d simple-git-deloy-daemon defaults
 sudo service simple-git-deloy-daemon start
 
 ```
+
+### Setting up Github Webhooks
+
+Go to your repository and find Webhooks from settings.
+
+* Add payload URL
+* Content type as application/json
+* Add secret from your config file.
+* Choose push, deployment and deployment statuses from events' list.
+
+Activate your webhook and you are good to go.
