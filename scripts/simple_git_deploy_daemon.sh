@@ -9,11 +9,11 @@
 # Short-Description: Hypnotoad Mojolicious Server for handling API requests
 ### END INIT INFO
 
-BASEDIR=$(dirname "$0")
+BASEDIR="$(dirname "$(readlink --canonicalize "$0")")"
 
 if [[ $EUID -ne 0 ]]; then
-    echo "You must run this script as 'root'";
-    exit 1;
+    echo "You must run this script as 'root'"
+    exit 1
 fi
 
 function start {
