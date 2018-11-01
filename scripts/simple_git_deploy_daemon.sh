@@ -7,6 +7,7 @@
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: Hypnotoad Mojolicious Server for handling API requests
+### END INIT INFO
 
 BASEDIR=$(dirname "$0")
 
