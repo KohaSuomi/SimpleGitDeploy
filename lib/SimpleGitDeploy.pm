@@ -7,6 +7,7 @@ use Mojo::Log;
 sub startup {
   my $self = shift;
 
+  $self->mode("production");
   my $config = $self->plugin('Config');
   my $log = Mojo::Log->new(path => $config->{logs}, level => $config->{log_level});
   $self->config($config);
